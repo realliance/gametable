@@ -4,4 +4,6 @@ target_sources(${PROJECT_NAME}
   PRIVATE
   "${DIR}/gametable.h"
   "${DIR}/enginecontroller.h"
+  "${DIR}/aiproxy.h"
+  "${DIR}/tablemanager.h"
 )
