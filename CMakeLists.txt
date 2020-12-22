@@ -1,0 +1,33 @@
+cmake_minimum_required(VERSION 3.12)
+set(CMAKE_CXX_STANDARD 20)
+include(FetchContent)
+project(gametable)
+
+set(BUILD_SHARED_LIBS TRUE)
+
+find_package(Pistache 0.0.2 REQUIRED)
+find_package(RapidJSON REQUIRED)
+
+add_subdirectory(${gametable_SOURCE_DIR}/libs)
+
+add_executable(${PROJECT_NAME})
+
+ProcessorCount(N)
+if(NOT N EQUAL 0)
+  set(CTEST_BUILD_FLAGS -j${N})
+  set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${N})
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  target_compile_options(libmahjong PRIVATE -pedantic -Wall -Wmost -Wextra)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(libmahjong PRIVATE -pedantic -Wall -Wextra)
+endif()
+
+add_subdirectory(${gametable_SOURCE_DIR}/src)
+
+get_target_property(gametable_sources gametable SOURCES)
+
+target_include_directories(${PROJECT_NAME} PUBLIC "${gametable_SOURCE_DIR}/include")
+target_link_libraries(${PROJECT_NAME} pistache_shared)
+target_link_libraries(${PROJECT_NAME} libmahjong)

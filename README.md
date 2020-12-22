@@ -1,0 +1,2 @@
+pistache-git
+rapidjson
