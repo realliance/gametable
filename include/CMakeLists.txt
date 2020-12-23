@@ -6,4 +6,5 @@ target_sources(${PROJECT_NAME}
   "${DIR}/enginecontroller.h"
   "${DIR}/aiproxy.h"
   "${DIR}/tablemanager.h"
+  "${DIR}/requestutilities.h"
 )

@@ -41,6 +41,9 @@ void signalHandler(int signal) {
 }
 
 int main () {
+    // Configure Signal Handler (for graceful server shutdowns, preventing ghost process port stealing)
+    std::signal(SIGINT, signalHandler);
+
     // Configure Logging (Default to Production)
     spdlog::set_level(spdlog::level::info);
     const char* level = std::getenv("LEVEL");
@@ -48,7 +51,7 @@ int main () {
       const std::string levelStr(level);
       if (levelStr == "DEBUG") {
         spdlog::set_level(spdlog::level::debug);
-        spdlog::debug("Logging Set to Debug");
+        spdlog::debug("Logging Set to Debug Level");
       }
     }
 
@@ -68,7 +71,7 @@ int main () {
     RegisterController([]() { return TableManager::getInstance().playerList[2]; }, "Player3");
     RegisterController([]() { return TableManager::getInstance().playerList[3]; }, "Player4");
 
-    spdlog::debug("Initialized AIs");
+    spdlog::debug("Initialized Proxy AIs");
 
     auto opts = Endpoint::options().threads(1);
     Endpoint server(addr);
@@ -81,7 +84,7 @@ int main () {
     spdlog::info("Server started on port {}", PORT);
     while (TableManager::getInstance().serverRunning);
 
-    spdlog::debug("Shutting Down...");
+    spdlog::info("Shutting Down, Goodbye");
 
     server.shutdown();
     exit(TableManager::getInstance().exitSignal);

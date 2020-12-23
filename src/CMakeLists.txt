@@ -6,4 +6,5 @@ target_sources(${PROJECT_NAME}
   "${DIR}/enginecontroller.cpp"
   "${DIR}/aiproxy.cpp"
   "${DIR}/tablemanager.cpp"
+  "${DIR}/requestutilities.cpp"
 )

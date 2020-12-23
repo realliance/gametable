@@ -4,10 +4,11 @@
 
 #include "enginecontroller.h"
 #include "tablemanager.h"
+#include "requestutilities.h"
 
 #include "pistache/endpoint.h"
+#include "pistache/router.h"
 
-#include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -20,15 +21,14 @@ using Mahjong::GameSettings;
 
 using rapidjson::StringBuffer;
 using rapidjson::Writer;
-using rapidjson::SizeType;
 
 using Pistache::Http::Code;
-using Pistache::Http::Header::ContentType;
-using Pistache::Http::Mime::MediaType;
-using Pistache::Http::Mime::Type;
-using Pistache::Http::Mime::Subtype;
 
 using namespace GameTable;
+
+using RequestUtilities::respondWithJSON;
+using RequestUtilities::writePair;
+using RequestUtilities::writeValue;
 
 auto EngineController::getAvaliableControllers(const Request& req, ResponseWriter res) -> void {
   auto controllers = GetAvailableControllers();
@@ -36,15 +36,9 @@ auto EngineController::getAvaliableControllers(const Request& req, ResponseWrite
   StringBuffer sb;
   Writer<StringBuffer> writer(sb);
 
-  writer.StartArray();
-  for (const auto& controller : controllers) {
-    writer.String(controller.c_str(), static_cast<SizeType>(controller.length()));
-  }
-  writer.EndArray();
+  writeValue(writer, controllers);
 
-  MediaType mime(Type::Application, Subtype::Json);
-  res.headers().add<ContentType>(mime);
-  res.send(Code::Ok, sb.GetString());
+  respondWithJSON(res, sb, Code::Ok);
 }
 
 auto EngineController::getGameStatus(const Request& req, ResponseWriter res) -> void {
@@ -52,16 +46,13 @@ auto EngineController::getGameStatus(const Request& req, ResponseWriter res) -> 
   Writer<StringBuffer> writer(sb);
 
   writer.StartObject();
-  writer.String("gameRunning");
-  writer.Bool(TableManager::getInstance().gameRunning);
 
-  writer.String("playersRegistered");
-  writer.Uint(TableManager::getInstance().numPlayers);
+  writePair(writer, "gameRunning", TableManager::getInstance().gameRunning);
+  writePair(writer, "playersRegistered", TableManager::getInstance().numPlayers);
+
   writer.EndObject();
 
-  MediaType mime(Type::Application, Subtype::Json);
-  res.headers().add<ContentType>(mime);
-  res.send(Code::Ok, sb.GetString());
+  respondWithJSON(res, sb, Code::Ok);
 }
 
 auto EngineController::registerForMatch(const Request& req, ResponseWriter res) -> void {
@@ -70,23 +61,20 @@ auto EngineController::registerForMatch(const Request& req, ResponseWriter res) 
 
   if (TableManager::getInstance().gameRunning) {
     writer.StartObject();
-    writer.String("error");
-    writer.String("Game Already Running");
+
+    writePair(writer, "error", "Game Already Running");
+
     writer.EndObject();
-    MediaType mime(Type::Application, Subtype::Json);
-    res.headers().add<ContentType>(mime);
-    res.send(Code::Bad_Request, sb.GetString());
+    respondWithJSON(res, sb, Code::Bad_Request);
     return;
   }
 
   auto playerNumber = TableManager::getInstance().numPlayers;
 
   writer.StartObject();
-  writer.String("playerToken");
-  writer.String(
-    TableManager::getInstance().playerIDs[playerNumber].c_str(),
-    static_cast<SizeType>(TableManager::getInstance().playerIDs[playerNumber].length())
-  );
+
+  writePair(writer, "playerToken", TableManager::getInstance().playerIDs[playerNumber]);
+
   writer.EndObject();
 
   TableManager::getInstance().numPlayers++;
@@ -101,7 +89,5 @@ auto EngineController::registerForMatch(const Request& req, ResponseWriter res) 
     TableManager::getInstance().gameRunning = true;
   }
 
-  MediaType mime(Type::Application, Subtype::Json);
-  res.headers().add<ContentType>(mime);
-  res.send(Code::Ok, sb.GetString());
+  respondWithJSON(res, sb, Code::Ok);
 }
