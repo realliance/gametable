@@ -1,2 +1,3 @@
 pistache-git
 rapidjson
+spdlog

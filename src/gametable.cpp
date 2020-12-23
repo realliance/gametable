@@ -1,6 +1,10 @@
 #include <iostream>
 #include <functional>
 #include <csignal>
+#include <cstdlib>
+#include <string>
+
+#include "spdlog/spdlog.h"
 
 #include "pistache/router.h"
 #include "pistache/endpoint.h"
@@ -30,14 +34,25 @@ auto configureRoutes(Router& router) -> void {
 }
 
 void signalHandler(int signal) {
-  std::cout << "Interrupt signal (" << signal << ") received." << std::endl;
+  spdlog::debug("Interrupt signal ({}) received.", signal);
 
   TableManager::getInstance().exitSignal = signal;
   TableManager::getInstance().serverRunning = false;
 }
 
 int main () {
-    std::cout << "Starting GameTable" << std::endl;
+    // Configure Logging (Default to Production)
+    spdlog::set_level(spdlog::level::info);
+    const char* level = std::getenv("LEVEL");
+    if (level != nullptr) {
+      const std::string levelStr(level);
+      if (levelStr == "DEBUG") {
+        spdlog::set_level(spdlog::level::debug);
+        spdlog::debug("Logging Set to Debug");
+      }
+    }
+
+    spdlog::info("Starting GameTable");
 
     const auto PORT = 8080;
 
@@ -46,14 +61,14 @@ int main () {
     Router router;
     configureRoutes(router);
 
-    std::cout << "Configured Routes" << std::endl;
+    spdlog::debug("Configured Routes");
 
     RegisterController([]() { return TableManager::getInstance().playerList[0]; }, "Player1");
     RegisterController([]() { return TableManager::getInstance().playerList[1]; }, "Player2");
     RegisterController([]() { return TableManager::getInstance().playerList[2]; }, "Player3");
     RegisterController([]() { return TableManager::getInstance().playerList[3]; }, "Player4");
 
-    std::cout << "Initialized AIs" << std::endl;
+    spdlog::debug("Initialized AIs");
 
     auto opts = Endpoint::options().threads(1);
     Endpoint server(addr);
@@ -63,10 +78,10 @@ int main () {
     server.serveThreaded();
 
     TableManager::getInstance().serverRunning = true;
-    std::cout << "Server started on port " << PORT << std::endl;
+    spdlog::info("Server started on port {}", PORT);
     while (TableManager::getInstance().serverRunning);
 
-    std::cout << "Shutting down..." << std::endl;
+    spdlog::debug("Shutting Down...");
 
     server.shutdown();
     exit(TableManager::getInstance().exitSignal);

@@ -7,6 +7,7 @@ set(BUILD_SHARED_LIBS TRUE)
 
 find_package(Pistache 0.0.2 REQUIRED)
 find_package(RapidJSON REQUIRED)
+find_package(spdlog REQUIRED)
 
 add_subdirectory(${gametable_SOURCE_DIR}/libs)
 
@@ -31,3 +32,4 @@ get_target_property(gametable_sources gametable SOURCES)
 target_include_directories(${PROJECT_NAME} PUBLIC "${gametable_SOURCE_DIR}/include")
 target_link_libraries(${PROJECT_NAME} pistache_shared)
 target_link_libraries(${PROJECT_NAME} libmahjong)
+target_link_libraries(${PROJECT_NAME} spdlog::spdlog)
