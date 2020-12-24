@@ -29,14 +29,18 @@ class AIProxy : public PlayerController {
     auto GetPrevalentWind() -> Wind { return prevalentWind; };
     auto GetStartingHand() -> std::vector<Piece> { return startingHand; };
     auto GetPlayerID() -> int { return playerID; };
+    auto GetRoundNum() -> uint16_t { return roundNum; };
+    auto GetEventLog() -> std::vector<Event> { return eventLog; };
   private:
     int playerID = -1;
+    uint16_t roundNum = 0;
     std::string name;
     std::vector<Event> queuedEvents;
     std::vector<int16_t> scores {0,0,0,0};
     Wind seatWind;
     Wind prevalentWind;
     std::vector<Piece> startingHand;
+    std::vector<Event> eventLog;
     Event decision;
     bool waitingOnDecision = false;
 };

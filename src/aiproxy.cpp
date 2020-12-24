@@ -18,6 +18,7 @@ auto AIProxy::GameStart(int id) -> void {
 }
 
 auto AIProxy::RoundStart(std::vector<Piece> h, Wind sW, Wind pW) -> void {
+  roundNum++;
   startingHand = h;
   seatWind = sW;
   prevalentWind = pW;
@@ -26,6 +27,9 @@ auto AIProxy::RoundStart(std::vector<Piece> h, Wind sW, Wind pW) -> void {
 auto AIProxy::ReceiveEvent(Event e) -> void {
   if (e.type == Event::Type::PointDiff) {
     scores[e.player] += e.piece;
+  }
+  if (!e.decision) {
+    eventLog.push_back(e);
   }
   queuedEvents.push_back(e);
 }

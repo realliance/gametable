@@ -9,7 +9,7 @@ find_package(Pistache 0.0.2 REQUIRED)
 find_package(RapidJSON REQUIRED)
 find_package(spdlog REQUIRED)
 
-add_subdirectory(${gametable_SOURCE_DIR}/libs)
+add_subdirectory(${gametable_SOURCE_DIR}/lib)
 
 add_executable(${PROJECT_NAME})
 

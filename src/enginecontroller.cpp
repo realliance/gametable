@@ -53,10 +53,18 @@ auto EngineController::getGameStatus(const Request& req, ResponseWriter res) -> 
   Writer<StringBuffer> writer(sb);
 
   writer.StartObject();
-
   writePair(writer, "gameRunning", TableManager::getInstance().gameRunning);
-  writePair(writer, "playersRegistered", TableManager::getInstance().numPlayers);
-  writePair(writer, "playerIDs", TableManager::getInstance().playerIDs);
+
+  if (TableManager::getInstance().gameRunning) {
+    writeValue(writer, "match");
+    writer.StartObject();
+    writePair(writer, "roundNum", TableManager::getInstance().playerList[0]->GetRoundNum());
+    writePair(writer, "scores", TableManager::getInstance().playerList[0]->GetScores());
+    writePair(writer, "eventLog", TableManager::getInstance().playerList[0]->GetEventLog());
+    writer.EndObject();
+  } else {
+    writePair(writer, "playersRegistered", TableManager::getInstance().numPlayers);
+  }
 
   writer.EndObject();
 
