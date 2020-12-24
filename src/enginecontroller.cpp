@@ -1,6 +1,9 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include<iterator>
+
+#include "spdlog/spdlog.h"
 
 #include "enginecontroller.h"
 #include "tablemanager.h"
@@ -49,6 +52,7 @@ auto EngineController::getGameStatus(const Request& req, ResponseWriter res) -> 
 
   writePair(writer, "gameRunning", TableManager::getInstance().gameRunning);
   writePair(writer, "playersRegistered", TableManager::getInstance().numPlayers);
+  writePair(writer, "playerIDs", TableManager::getInstance().playerIDs);
 
   writer.EndObject();
 
@@ -77,6 +81,8 @@ auto EngineController::registerForMatch(const Request& req, ResponseWriter res) 
 
   writer.EndObject();
 
+  spdlog::debug("Granted Token {}", TableManager::getInstance().playerIDs[playerNumber]);
+
   TableManager::getInstance().numPlayers++;
   
   if (TableManager::getInstance().numPlayers == 4) {
@@ -87,7 +93,39 @@ auto EngineController::registerForMatch(const Request& req, ResponseWriter res) 
     StartGame(settings, true);
 
     TableManager::getInstance().gameRunning = true;
+    spdlog::debug("Game Started");
   }
 
   respondWithJSON(res, sb, Code::Ok);
+}
+
+auto EngineController::getEventQueue(const Request& req, ResponseWriter res) -> void {
+  auto token = req.param(":token").as<std::string>();
+
+  spdlog::debug("Events requested from {}", token);
+  spdlog::debug("Player List Length {}", TableManager::getInstance().playerIDs.size());
+
+  StringBuffer sb;
+  Writer<StringBuffer> writer(sb);
+
+  uint8_t i = 0;
+  for (const auto& id : TableManager::getInstance().playerIDs) {
+    spdlog::debug("Checking against ID {}", id);
+    if (id.compare(token) == 0) {
+      spdlog::debug("ID Found, index {}", i);
+      auto playerAI = TableManager::getInstance().playerList[i];
+      auto eventQueue = playerAI->PopEventQueue();
+      writeValue(writer, eventQueue);
+      respondWithJSON(res, sb, Code::Ok);
+      return;
+    }
+    i++;
+  }
+
+  writer.StartObject();
+
+  writePair(writer, "error", "Player Not Found");
+
+  writer.EndObject();
+  respondWithJSON(res, sb, Code::Not_Found);  
 }

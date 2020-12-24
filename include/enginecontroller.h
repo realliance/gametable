@@ -10,5 +10,6 @@ namespace GameTable {
       auto getAvaliableControllers(const Request&, ResponseWriter) -> void;
       auto getGameStatus(const Request&, ResponseWriter) -> void;
       auto registerForMatch(const Request&, ResponseWriter) -> void;
+      auto getEventQueue(const Request&, ResponseWriter) -> void;
   }
 }

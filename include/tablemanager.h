@@ -5,6 +5,8 @@
 #include <vector>
 #include <random>
 
+#include "spdlog/spdlog.h"
+
 #include "aiproxy.h"
 #include "playercontroller.h"
 
@@ -32,11 +34,11 @@ class TableManager {
     std::vector<std::string> playerIDs;
 
     void ResetProxies() {
+      spdlog::debug("Reset Proxies Called");
       playerList.clear();
       playerList.reserve(4);
 
       playerIDs.clear();
-      playerIDs.reserve(4);
 
       std::string str("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 
@@ -45,8 +47,10 @@ class TableManager {
 
       for (uint8_t i = 0; i < 4; i++) {
         std::shuffle(str.begin(), str.end(), generator);
-        playerIDs[i] = str.substr(0, 25);
+        playerIDs.push_back(str.substr(0, 25));
       }
+
+      spdlog::debug("playerIDs size: {}", playerIDs.size());
 
       playerList[0] = new AIProxy("Player1");
       playerList[1] = new AIProxy("Player2");

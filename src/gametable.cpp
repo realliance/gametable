@@ -30,6 +30,8 @@ using namespace GameTable::EngineController;
 auto configureRoutes(Router& router) -> void {
   Get(router, "/controllers", bind(&getAvaliableControllers));
   Get(router, "/status", bind(&getGameStatus));
+  Get(router, "/events/:token", bind(&getEventQueue));
+
   Post(router, "/register", bind(&registerForMatch));
 }
 
@@ -57,7 +59,7 @@ int main () {
 
     spdlog::info("Starting GameTable");
 
-    const auto PORT = 8080;
+    const auto PORT = 7777;
 
     Address addr(Ipv4::any(), Port(PORT));
 
@@ -78,9 +80,9 @@ int main () {
     server.init(opts);
     server.setHandler(router.handler());
 
-    server.serveThreaded();
-
     TableManager::getInstance().serverRunning = true;
+    server.serveThreaded();
+  
     spdlog::info("Server started on port {}", PORT);
     while (TableManager::getInstance().serverRunning);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../build/_deps/libmahjong-src/include/event.h"
+
 #include <string>
 #include <vector>
 #include "pistache/endpoint.h"
@@ -11,14 +13,18 @@ using Pistache::Http::Code;
 using rapidjson::StringBuffer;
 using rapidjson::Writer;
 
+using Mahjong::Event;
+
 namespace GameTable {
   namespace RequestUtilities {
-    auto respondWithJSON(ResponseWriter& res, StringBuffer& sb, Code c) -> void;
+    auto respondWithJSON(ResponseWriter&, StringBuffer&, Code) -> void;
 
     // Overload Function Mapping for Writing JSON values
-    auto writeValue(Writer<StringBuffer>& writer, std::string str) -> void;
-    auto writeValue(Writer<StringBuffer>& writer, uint8_t unum) -> void;
-    auto writeValue(Writer<StringBuffer>& writer, bool b) -> void;
+    auto writeValue(Writer<StringBuffer>&, std::string) -> void;
+    auto writeValue(Writer<StringBuffer>&, unsigned int) -> void;
+    auto writeValue(Writer<StringBuffer>&, int) -> void;
+    auto writeValue(Writer<StringBuffer>&, bool) -> void;
+    auto writeValue(Writer<StringBuffer>&, Event) -> void;
 
     template <typename T>
     auto writeValue(Writer<StringBuffer>& writer, std::vector<T> list) -> void {
