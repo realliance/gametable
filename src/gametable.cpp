@@ -33,6 +33,7 @@ auto configureRoutes(Router& router) -> void {
   Get(router, "/events/:token", bind(&getEventQueue));
 
   Post(router, "/register", bind(&registerForMatch));
+  Post(router, "/makedecision/:token", bind(&onUserDecision));
 }
 
 void signalHandler(int signal) {
@@ -59,7 +60,7 @@ int main () {
 
     spdlog::info("Starting GameTable");
 
-    const auto PORT = 7777;
+    const auto PORT = 8080;
 
     Address addr(Ipv4::any(), Port(PORT));
 

@@ -22,13 +22,21 @@ class AIProxy : public PlayerController {
     auto ReceiveEvent(Event e) -> void override;
     auto RetrieveDecision() -> Event override;
     auto PopEventQueue() -> std::vector<Event>;
+    auto WaitingOnDecision() -> bool { return waitingOnDecision; };
+    auto MakeDecision(Event) -> void;
+    auto GetScores() -> std::vector<int16_t> { return scores; };
+    auto GetSeatWind() -> Wind { return seatWind; };
+    auto GetPrevalentWind() -> Wind { return prevalentWind; };
+    auto GetStartingHand() -> std::vector<Piece> { return startingHand; };
+    auto GetPlayerID() -> int { return playerID; };
   private:
-    int playerID;
+    int playerID = -1;
+    std::string name;
+    std::vector<Event> queuedEvents;
+    std::vector<int16_t> scores {0,0,0,0};
     Wind seatWind;
     Wind prevalentWind;
     std::vector<Piece> startingHand;
-    std::string name;
-    std::vector<Event> queuedEvents;
     Event decision;
-    bool waitingOnDecision;
+    bool waitingOnDecision = false;
 };

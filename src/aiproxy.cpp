@@ -2,9 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 AIProxy::AIProxy(std::string n) {
   name = n;
+  std::fill(scores.begin(), scores.end(), 250);
 }
 
 auto AIProxy::Name() -> std::string {
@@ -22,6 +24,9 @@ auto AIProxy::RoundStart(std::vector<Piece> h, Wind sW, Wind pW) -> void {
 }
 
 auto AIProxy::ReceiveEvent(Event e) -> void {
+  if (e.type == Event::Type::PointDiff) {
+    scores[e.player] += e.piece;
+  }
   queuedEvents.push_back(e);
 }
 
@@ -35,4 +40,9 @@ auto AIProxy::PopEventQueue() -> std::vector<Event> {
   auto events = queuedEvents;
   queuedEvents.clear();
   return events;
+}
+
+auto AIProxy::MakeDecision(Event e) -> void { 
+  decision = e;
+  waitingOnDecision = false;
 }

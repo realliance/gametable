@@ -12,6 +12,7 @@
 #include "pistache/endpoint.h"
 #include "pistache/router.h"
 
+#include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -24,6 +25,7 @@ using Mahjong::GameSettings;
 
 using rapidjson::StringBuffer;
 using rapidjson::Writer;
+using rapidjson::Document;
 
 using Pistache::Http::Code;
 
@@ -32,6 +34,8 @@ using namespace GameTable;
 using RequestUtilities::respondWithJSON;
 using RequestUtilities::writePair;
 using RequestUtilities::writeValue;
+using RequestUtilities::canParseEvent;
+using RequestUtilities::parseEvent;
 
 auto EngineController::getAvaliableControllers(const Request& req, ResponseWriter res) -> void {
   auto controllers = GetAvailableControllers();
@@ -103,19 +107,28 @@ auto EngineController::getEventQueue(const Request& req, ResponseWriter res) -> 
   auto token = req.param(":token").as<std::string>();
 
   spdlog::debug("Events requested from {}", token);
-  spdlog::debug("Player List Length {}", TableManager::getInstance().playerIDs.size());
 
   StringBuffer sb;
   Writer<StringBuffer> writer(sb);
 
   uint8_t i = 0;
   for (const auto& id : TableManager::getInstance().playerIDs) {
-    spdlog::debug("Checking against ID {}", id);
     if (id.compare(token) == 0) {
       spdlog::debug("ID Found, index {}", i);
       auto playerAI = TableManager::getInstance().playerList[i];
       auto eventQueue = playerAI->PopEventQueue();
-      writeValue(writer, eventQueue);
+      writer.StartObject();
+      writePair(writer, "playerID", playerAI->GetPlayerID());
+      writeValue(writer, "round");
+      writer.StartObject();
+      writePair(writer, "startingHand", playerAI->GetStartingHand());
+      writePair(writer, "seatWind", (uint8_t) playerAI->GetSeatWind());
+      writePair(writer, "prevalentWind", (uint8_t) playerAI->GetPrevalentWind());
+      writer.EndObject();
+      writePair(writer, "scores", playerAI->GetScores());
+      writePair(writer, "waitingOnDecision", playerAI->WaitingOnDecision());
+      writePair(writer, "queue", eventQueue);
+      writer.EndObject();
       respondWithJSON(res, sb, Code::Ok);
       return;
     }
@@ -126,6 +139,47 @@ auto EngineController::getEventQueue(const Request& req, ResponseWriter res) -> 
 
   writePair(writer, "error", "Player Not Found");
 
+  writer.EndObject();
+  respondWithJSON(res, sb, Code::Not_Found);  
+}
+
+auto EngineController::onUserDecision(const Request& req, ResponseWriter res) -> void {
+  auto token = req.param(":token").as<std::string>();
+
+  spdlog::debug("Decision Posted by token {}", token);
+
+  std::string body = req.body();
+
+  StringBuffer sb;
+  Writer<StringBuffer> writer(sb);
+  Document d;
+  d.Parse(body.c_str());
+
+  if (d.HasParseError() || !canParseEvent(d)) {
+    writer.StartObject();
+    writePair(writer, "error", "Malformed JSON Body");
+    writer.EndObject();
+    respondWithJSON(res, sb, Code::Bad_Request);
+    return;
+  }
+
+  uint8_t i = 0;
+  for (const auto& id : TableManager::getInstance().playerIDs) {
+    if (id.compare(token) == 0) {
+      spdlog::debug("ID Found, index {}", i);
+      auto playerAI = TableManager::getInstance().playerList[i];
+      auto event = parseEvent(d);
+      playerAI->MakeDecision(event);
+      writer.StartObject();
+      writePair(writer, "receipt", event);
+      writer.EndObject();
+      respondWithJSON(res, sb, Code::Ok);  
+      return;
+    }
+  }
+
+  writer.StartObject();
+  writePair(writer, "error", "Player Not Found");
   writer.EndObject();
   respondWithJSON(res, sb, Code::Not_Found);  
 }
