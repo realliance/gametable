@@ -19,6 +19,8 @@
 #include "controllermanager.h"
 #include "statefunctions.h"
 
+#include "libmahjonghttp/jsonhelper.h"
+
 using Mahjong::GetAvailableControllers;
 using Mahjong::StartGame;
 using Mahjong::GameSettings;
@@ -30,12 +32,9 @@ using rapidjson::Document;
 using Pistache::Http::Code;
 
 using namespace GameTable;
+using namespace MahjongHttp::JSONHelper;
 
 using RequestUtilities::respondWithJSON;
-using RequestUtilities::writePair;
-using RequestUtilities::writeValue;
-using RequestUtilities::canParseEvent;
-using RequestUtilities::parseEvent;
 
 auto EngineController::getAvaliableControllers(const Request& req, ResponseWriter res) -> void {
   auto controllers = GetAvailableControllers();
@@ -184,6 +183,7 @@ auto EngineController::onUserDecision(const Request& req, ResponseWriter res) ->
       respondWithJSON(res, sb, Code::Ok);  
       return;
     }
+    i++;
   }
 
   writer.StartObject();

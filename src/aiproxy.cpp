@@ -31,11 +31,12 @@ auto AIProxy::ReceiveEvent(Event e) -> void {
   if (!e.decision) {
     eventLog.push_back(e);
   }
+
+  waitingOnDecision = e.decision;
   queuedEvents.push_back(e);
 }
 
 auto AIProxy::RetrieveDecision() -> Event {
-  waitingOnDecision = true;
   while (waitingOnDecision);
   return decision;
 }
