@@ -57,9 +57,9 @@ auto EngineController::getGameStatus(const Request& req, ResponseWriter res) -> 
   if (TableManager::getInstance().gameRunning) {
     writeValue(writer, "match");
     writer.StartObject();
-    writePair(writer, "roundNum", TableManager::getInstance().playerList[0]->GetRoundNum());
-    writePair(writer, "scores", TableManager::getInstance().playerList[0]->GetScores());
-    writePair(writer, "eventLog", TableManager::getInstance().playerList[0]->GetEventLog());
+    writePair(writer, "roundNum", TableManager::getInstance().roundNum);
+    writePair(writer, "scores", TableManager::getInstance().scores);
+    writePair(writer, "eventLog", TableManager::getInstance().eventLog);
     writer.EndObject();
   } else {
     writePair(writer, "playersRegistered", TableManager::getInstance().numPlayers);
@@ -104,7 +104,7 @@ auto EngineController::registerForMatch(const Request& req, ResponseWriter res) 
     StartGame(settings, true);
 
     TableManager::getInstance().gameRunning = true;
-    spdlog::debug("Game Started");
+    spdlog::info("Match Started");
   }
 
   respondWithJSON(res, sb, Code::Ok);
@@ -121,9 +121,9 @@ auto EngineController::getEventQueue(const Request& req, ResponseWriter res) -> 
   uint8_t i = 0;
   for (const auto& id : TableManager::getInstance().playerIDs) {
     if (id.compare(token) == 0) {
-      spdlog::debug("ID Found, index {}", i);
       auto playerAI = TableManager::getInstance().playerList[i];
-      auto eventQueue = playerAI->PopEventQueue();
+      auto eventQueue = TableManager::getInstance().queuedEvents[i];
+      TableManager::getInstance().queuedEvents[i].clear();
       writer.StartObject();
       writePair(writer, "playerID", playerAI->GetPlayerID());
       writeValue(writer, "round");
@@ -132,7 +132,7 @@ auto EngineController::getEventQueue(const Request& req, ResponseWriter res) -> 
       writePair(writer, "seatWind", (uint8_t) playerAI->GetSeatWind());
       writePair(writer, "prevalentWind", (uint8_t) playerAI->GetPrevalentWind());
       writer.EndObject();
-      writePair(writer, "scores", playerAI->GetScores());
+      writePair(writer, "scores", TableManager::getInstance().scores);
       writePair(writer, "waitingOnDecision", playerAI->WaitingOnDecision());
       writePair(writer, "queue", eventQueue);
       writer.EndObject();
@@ -173,7 +173,6 @@ auto EngineController::onUserDecision(const Request& req, ResponseWriter res) ->
   uint8_t i = 0;
   for (const auto& id : TableManager::getInstance().playerIDs) {
     if (id.compare(token) == 0) {
-      spdlog::debug("ID Found, index {}", i);
       auto playerAI = TableManager::getInstance().playerList[i];
       auto event = parseEvent(d);
       playerAI->MakeDecision(event);

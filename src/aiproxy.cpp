@@ -1,12 +1,15 @@
 #include "aiproxy.h"
 
+#include "tablemanager.h"
+#include "spdlog/spdlog.h"
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <thread>
+#include <chrono>
 
 AIProxy::AIProxy(std::string n) {
   name = n;
-  std::fill(scores.begin(), scores.end(), 250);
 }
 
 auto AIProxy::Name() -> std::string {
@@ -18,33 +21,39 @@ auto AIProxy::GameStart(int id) -> void {
 }
 
 auto AIProxy::RoundStart(std::vector<Piece> h, Wind sW, Wind pW) -> void {
-  roundNum++;
   startingHand = h;
   seatWind = sW;
   prevalentWind = pW;
+  if (playerID == 0) {
+    TableManager::getInstance().roundNum++;
+    spdlog::info("Round {} Started", TableManager::getInstance().roundNum);
+  }
 }
 
 auto AIProxy::ReceiveEvent(Event e) -> void {
-  if (e.type == Event::Type::PointDiff) {
-    scores[e.player] += e.piece;
+  if (e.type == Event::Type::PointDiff && playerID == 0) {
+    TableManager::getInstance().scores[e.player] += e.piece;
+    spdlog::debug("Added {} to player {}", e.piece, e.player);
   }
+
   if (!e.decision) {
-    eventLog.push_back(e);
+    TableManager::getInstance().eventLog.push_back(e);
   }
 
   waitingOnDecision = e.decision;
-  queuedEvents.push_back(e);
+  TableManager::getInstance().queuedEvents[playerID].push_back(e);
+
+  if (e.type == Event::Type::End && playerID == 0) {
+    spdlog::debug("End Event Found, Beginning Shutdown");
+    TableManager::getInstance().serverRunning = false;
+  }
 }
 
 auto AIProxy::RetrieveDecision() -> Event {
-  while (waitingOnDecision);
+  while (waitingOnDecision) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
   return decision;
-}
-
-auto AIProxy::PopEventQueue() -> std::vector<Event> {
-  auto events = queuedEvents;
-  queuedEvents.clear();
-  return events;
 }
 
 auto AIProxy::MakeDecision(Event e) -> void { 

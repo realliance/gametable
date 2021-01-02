@@ -10,12 +10,15 @@
 #include "aiproxy.h"
 #include "playercontroller.h"
 
-using Mahjong::PlayerController;
+using Mahjong::PlayerController, Mahjong::Event;
 
 class TableManager {
   private:
     TableManager() {
       ResetProxies();
+      scores.resize(4);
+      std::fill(scores.begin(), scores.end(), 250);
+      queuedEvents.resize(4);
     };
   public:
     static TableManager& getInstance() {
@@ -25,6 +28,7 @@ class TableManager {
 
     std::map<std::string, PlayerController*> playerMap;
     uint8_t numPlayers = 0;
+    uint8_t roundNum = 0;
     bool gameRunning = false;
 
     bool serverRunning = false;
@@ -32,6 +36,9 @@ class TableManager {
 
     std::vector<AIProxy*> playerList;
     std::vector<std::string> playerIDs;
+    std::vector<int32_t> scores;
+    std::vector<std::vector<Event>> queuedEvents;
+    std::vector<Event> eventLog;
 
     void ResetProxies() {
       spdlog::debug("Reset Proxies Called");

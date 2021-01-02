@@ -3,8 +3,6 @@ set(CMAKE_CXX_STANDARD 20)
 include(FetchContent)
 project(gametable)
 
-set(BUILD_SHARED_LIBS TRUE)
-
 find_package(Pistache 0.0.2 REQUIRED)
 find_package(RapidJSON REQUIRED)
 find_package(spdlog REQUIRED)
