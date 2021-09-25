@@ -40,7 +40,7 @@ using GametableSDK::Network::connectToMatch;
 
 int main() {
   MyBot botInstance;
-  connectToMatch(botInstance, "http://gametable.riichiroyale.com:8080");
+  connectToMatch(botInstance, "http://gametable.example.com:8080");
   return 0;
 }
 ```
